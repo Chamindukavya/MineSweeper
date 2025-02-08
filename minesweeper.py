@@ -1,5 +1,6 @@
 import itertools
 import random
+import copy
 
 
 class Minesweeper():
@@ -205,6 +206,7 @@ class MinesweeperAI():
                if they can be inferred from existing knowledge
         """
 
+
         # 1) mark the cell as a move that has been made
         self.moves_made.add(cell)
 
@@ -214,15 +216,54 @@ class MinesweeperAI():
         # 3) add a new sentence to the AI's knowledge base based on the value of `cell` and `count`
 
         neigbhors = self.get_neigbhors(cell)
+        removedCells = set()
+        
 
-        visitedAmoungNeigbhors = set()
         for neigbhor in neigbhors:
-            if neigbhor in self.moves_made:
-                visitedAmoungNeigbhors.add(neigbhor)       
-
-        nonVisitedAmoungNeigbhors = neigbhor - visitedAmoungNeigbhors
-        newSentence = Sentence(nonVisitedAmoungNeigbhors,count)
+            if (neigbhor in self.moves_made) and (neigbhor in self.safes):
+                removedCells.add(neigbhor)
+            elif neigbhor in self.mines:
+                self.mark_mine(neigbhor)
+                removedCells.add(neigbhor)
+                count = count - 1 
+            elif neigbhor in self.safes:
+                removedCells.add(neigbhor)
+                self.mark_safe(neigbhor)
+            elif count == 0:
+                neigbhors1 = neigbhors - removedCells
+                for neigbhor1 in neigbhors1:
+                    if neigbhor1 not in self.moves_made:
+                        self.mark_safe(neigbhor1)
+                return        
+            elif count == (len(neigbhors)-len(removedCells)):
+                neigbhors2 = neigbhors - removedCells
+                for neigbhor2 in neigbhors2:
+                    self.mark_safe(neigbhor2)
+                return 
+        newNeigbhors = neigbhors - removedCells
+        newSentence = Sentence(newNeigbhors,count)
         self.knowledge.append(newSentence)
+        # #if count == 0 then there are no any mines
+        # if count == 0:
+        #     for neigbhor in neigbhors:
+        #         if neigbhor not in self.moves_made:
+        #             self.mark_safe(neigbhor)
+                    
+        # else:
+        #     visitedAmoungNeigbhors = set()
+        #     for neigbhor in neigbhors:
+        #         if neigbhor in self.moves_made and neigbhor in self.safes:
+        #             visitedAmoungNeigbhors.add(neigbhor)       
+
+        #     nonVisitedAmoungNeigbhors = neigbhors - visitedAmoungNeigbhors
+
+        #     #if count == cells then all cells are mines
+        #     if count==len(nonVisitedAmoungNeigbhors):
+        #         for nonVisitedAmoungNeigbhor in nonVisitedAmoungNeigbhors:
+        #             self.mark_mine(nonVisitedAmoungNeigbhors)
+        #     else:
+        #         newSentence = Sentence(nonVisitedAmoungNeigbhors,count)
+        #         self.knowledge.append(newSentence)
 
         #4) mark any additional cells as safe or as mines if it can be concluded based on the AI's knowledge base
         
@@ -230,21 +271,21 @@ class MinesweeperAI():
             safes = sentence.known_safes()
             mines = sentence.known_mines()
 
-            if len(safes) != 0:
-                for safeBlock in safes:
+            deepSafes = copy.deepcopy(safes)
+            deepMines = copy.deepcopy(mines)
+            if len(deepSafes) != 0:
+                for safeBlock in deepSafes:
                     self.mark_safe(safeBlock)
 
-            if len(mines) != 0:
-                for mine in mines:
+            if len(deepMines) != 0:
+                for mine in deepMines:
                     self.mark_mine(mine)
 
             for checkSentence in self.knowledge:
-                if checkSentence == sentence:   
-                    continue
 
                 inferedCells = sentence.cells - checkSentence.cells
                 inferedCount = sentence.count - checkSentence.count
-                if inferedCells == sentence.cells and inferedCount<=0:   #not sure whether i need to use len or just this can do the eqaulism
+                if checkSentence == sentence and inferedCells == sentence.cells and inferedCount<0:   #not sure whether i need to use len or just this can do the eqaulism
                     continue
                 
                 inferedSentence = Sentence(inferedCells,inferedCount)
@@ -260,7 +301,18 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        # deepCopiedSafes = copy.deepcopy(self.safes)
+        # deepCopiedMines = copy.deepcopy(self.mines)
+        # deepCopiedMovesMade = copy.deepcopy(self.moves_made)
+
+        safeConfiremed =self.safes - self.mines
+
+        safesNotVisitedBefore = safeConfiremed - self.moves_made
+
+        if len(safesNotVisitedBefore) != 0:
+            return safesNotVisitedBefore.pop()
+
+        return
 
     def make_random_move(self):
         """
@@ -269,4 +321,15 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+
+        allTheCells = set()
+        
+        for i in range(8):
+            for j in range(8):
+                allTheCells.add((i,j))
+
+        cellsWithoutMines = allTheCells - self.mines
+        cellsNotViseted = cellsWithoutMines - self.moves_made
+        if len(cellsNotViseted) != 0:
+            return cellsNotViseted.pop()
+        return

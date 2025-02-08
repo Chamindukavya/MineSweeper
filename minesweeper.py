@@ -220,76 +220,49 @@ class MinesweeperAI():
         
 
         for neigbhor in neigbhors:
-            if (neigbhor in self.moves_made) and (neigbhor in self.safes):
+            if neigbhor in self.moves_made:
                 removedCells.add(neigbhor)
             elif neigbhor in self.mines:
-                self.mark_mine(neigbhor)
                 removedCells.add(neigbhor)
                 count = count - 1 
             elif neigbhor in self.safes:
                 removedCells.add(neigbhor)
-                self.mark_safe(neigbhor)
-            elif count == 0:
-                neigbhors1 = neigbhors - removedCells
-                for neigbhor1 in neigbhors1:
-                    if neigbhor1 not in self.moves_made:
-                        self.mark_safe(neigbhor1)
-                return        
-            elif count == (len(neigbhors)-len(removedCells)):
-                neigbhors2 = neigbhors - removedCells
-                for neigbhor2 in neigbhors2:
-                    self.mark_safe(neigbhor2)
-                return 
+
         newNeigbhors = neigbhors - removedCells
-        newSentence = Sentence(newNeigbhors,count)
-        self.knowledge.append(newSentence)
-        # #if count == 0 then there are no any mines
-        # if count == 0:
-        #     for neigbhor in neigbhors:
-        #         if neigbhor not in self.moves_made:
-        #             self.mark_safe(neigbhor)
-                    
-        # else:
-        #     visitedAmoungNeigbhors = set()
-        #     for neigbhor in neigbhors:
-        #         if neigbhor in self.moves_made and neigbhor in self.safes:
-        #             visitedAmoungNeigbhors.add(neigbhor)       
-
-        #     nonVisitedAmoungNeigbhors = neigbhors - visitedAmoungNeigbhors
-
-        #     #if count == cells then all cells are mines
-        #     if count==len(nonVisitedAmoungNeigbhors):
-        #         for nonVisitedAmoungNeigbhor in nonVisitedAmoungNeigbhors:
-        #             self.mark_mine(nonVisitedAmoungNeigbhors)
-        #     else:
-        #         newSentence = Sentence(nonVisitedAmoungNeigbhors,count)
-        #         self.knowledge.append(newSentence)
-
-        #4) mark any additional cells as safe or as mines if it can be concluded based on the AI's knowledge base
+        if count == 0:
+            for neigbhor1 in newNeigbhors:
+                if neigbhor1 not in self.moves_made:
+                    self.mark_safe(neigbhor1)        
+        elif count == len(newNeigbhors):
+            for neigbhor2 in newNeigbhors:
+                self.mark_mine(neigbhor2) 
+        else:        
+            newSentence = Sentence(newNeigbhors,count)
+            self.knowledge.append(newSentence)
         
         for sentence in self.knowledge:
             safes = sentence.known_safes()
             mines = sentence.known_mines()
 
-            deepSafes = copy.deepcopy(safes)
-            deepMines = copy.deepcopy(mines)
-            if len(deepSafes) != 0:
-                for safeBlock in deepSafes:
-                    self.mark_safe(safeBlock)
+            for safeBlock in safes:
+               self.mark_safe(safeBlock)
 
-            if len(deepMines) != 0:
-                for mine in deepMines:
-                    self.mark_mine(mine)
+       
+            for mine in mines:
+               self.mark_mine(mine)
 
-            for checkSentence in self.knowledge:
 
-                inferedCells = sentence.cells - checkSentence.cells
-                inferedCount = sentence.count - checkSentence.count
-                if checkSentence == sentence and inferedCells == sentence.cells and inferedCount<0:   #not sure whether i need to use len or just this can do the eqaulism
-                    continue
-                
-                inferedSentence = Sentence(inferedCells,inferedCount)
-                self.knowledge.append(inferedSentence)
+        for sentence5 in self.knowledge:
+                for checkSentence in self.knowledge:
+
+                    inferedCells = sentence5.cells - checkSentence.cells
+                    inferedCount = sentence5.count - checkSentence.count
+                    if checkSentence == sentence and inferedCells == sentence.cells and inferedCount<0:   #not sure whether i need to use len or just this can do the eqaulism
+                        continue
+                    
+                    inferedSentence = Sentence(inferedCells,inferedCount)
+                    if inferedSentence not in self.knowledge:
+                        self.knowledge.append(inferedSentence)
 
 
     def make_safe_move(self):

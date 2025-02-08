@@ -229,6 +229,7 @@ class MinesweeperAI():
         for sentence in self.knowledge:
             safes = sentence.known_safes()
             mines = sentence.known_mines()
+
             if len(safes) != 0:
                 for safeBlock in safes:
                     self.mark_safe(safeBlock)
@@ -237,7 +238,19 @@ class MinesweeperAI():
                 for mine in mines:
                     self.mark_mine(mine)
 
-                    
+            for checkSentence in self.knowledge:
+                if checkSentence == sentence:   
+                    continue
+
+                inferedCells = sentence.cells - checkSentence.cells
+                inferedCount = sentence.count - checkSentence.count
+                if inferedCells == sentence.cells and inferedCount<=0:   #not sure whether i need to use len or just this can do the eqaulism
+                    continue
+                
+                inferedSentence = Sentence(inferedCells,inferedCount)
+                self.knowledge.append(inferedSentence)
+
+
     def make_safe_move(self):
         """
         Returns a safe cell to choose on the Minesweeper board.

@@ -244,26 +244,41 @@ class MinesweeperAI():
             safes = sentence.known_safes()
             mines = sentence.known_mines()
 
-            for safeBlock in safes:
+            deepSafes = copy.deepcopy(safes)
+            deepMines = copy.deepcopy(mines)
+
+            for safeBlock in deepSafes:
                self.mark_safe(safeBlock)
 
        
-            for mine in mines:
+            for mine in deepMines:
                self.mark_mine(mine)
 
+        # checkedKnowladge = []
+        # for sentence5 in self.knowledge:
+        #         for checkSentence in self.knowledge:
 
+        #             inferedCells = sentence5.cells - checkSentence.cells
+        #             inferedCount = sentence5.count - checkSentence.count
+        #             if checkSentence == sentence5 and inferedCells == sentence5.cells and inferedCount<0:   #not sure whether i need to use len or just this can do the eqaulism
+        #                 continue
+                   
+        #             inferedSentence = Sentence(inferedCells,inferedCount)
+        #             if inferedSentence not in self.knowledge:
+        #                 self.knowledge.append(inferedSentence)
+        j = 0
         for sentence5 in self.knowledge:
-                for checkSentence in self.knowledge:
-
-                    inferedCells = sentence5.cells - checkSentence.cells
-                    inferedCount = sentence5.count - checkSentence.count
-                    if checkSentence == sentence and inferedCells == sentence.cells and inferedCount<0:   #not sure whether i need to use len or just this can do the eqaulism
-                        continue
-                    
-                    inferedSentence = Sentence(inferedCells,inferedCount)
-                    if inferedSentence not in self.knowledge:
-                        self.knowledge.append(inferedSentence)
-
+            j = j+1
+            for i in range(j,len(self.knowledge)):
+                inferedCount = sentence5.count - self.knowledge[i].count
+                if inferedCount<0:
+                    inferedCount = inferedCount*-1
+                    inferedCells = self.knowledge[i].cells - sentence5.cells
+                inferedCells = sentence5.cells - self.knowledge[i].cells
+                 
+                inferedSentence = Sentence(inferedCells,inferedCount)
+                if inferedSentence not in self.knowledge:
+                    self.knowledge.append(inferedSentence)
 
     def make_safe_move(self):
         """

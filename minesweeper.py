@@ -202,7 +202,7 @@ class MinesweeperAI():
                based on the value of `cell` and `count`
             4) mark any additional cells as safe or as mines
                if it can be concluded based on the AI's knowledge base
-            5) add any new sentences to the AI's knowledge base
+            5) add any new sentences to the AI's knowledge bas
                if they can be inferred from existing knowledge
         """
 
